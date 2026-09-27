@@ -6,7 +6,7 @@
 <title>Equivaler — Conversão de unidades passo a passo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     color-scheme:light;
@@ -90,17 +90,23 @@
   .cf .cn{border-bottom:1.4px solid currentColor;padding:0 .2em 1px;position:relative}
   .cf .cd{padding:1px .2em 0;position:relative}
 
-  .ck{position:relative}
-  .ck::after{content:'';position:absolute;left:-2px;right:-2px;top:50%;height:2px;background:var(--cancel);transform:scaleX(0);transform-origin:left;border-radius:2px;transition:transform .5s ease .15s}
-  .ck.on{color:var(--cancel)}
-  .ck.on::after{transform:scaleX(1)}
+  /* unidade que se corta: cor distinta desde o início + traço animado */
+  .cut{position:relative;color:var(--cancel);font-weight:700}
+  .cut::after{content:'';position:absolute;left:-2px;right:-2px;top:50%;height:2.4px;background:var(--cancel);transform:scaleX(0);transform-origin:left;border-radius:2px;transition:transform .5s ease .15s}
+  .cut.on::after{transform:scaleX(1)}
+  /* fração de unidade (vazão) no mesmo tamanho da fração de conversão */
+  .frac.ufrac .num,.frac.ufrac .den{padding:0 .5em;font-weight:500}
 
   .rt{display:grid;grid-template-columns:auto auto auto;gap:8px 14px;align-items:center;justify-items:start;font-family:"IBM Plex Mono",monospace;font-size:1.02rem;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:14px;overflow-x:auto}
   .rt .cell{display:inline-flex;align-items:center;gap:.15em;white-space:nowrap}
   .rt .arm{color:var(--accent)}
   .rt .x{color:var(--accent);font-weight:600}
 
-  .note{font-family:"Kalam",cursive;font-size:.95rem;color:var(--ink-soft);margin-top:9px;line-height:1.35}
+  .note{font-family:"IBM Plex Sans",sans-serif;font-size:.85rem;color:var(--ink-soft);margin-top:10px;line-height:1.45;background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--line-2);border-radius:8px;padding:9px 12px}
+  .note::first-letter{text-transform:uppercase}
+  .why{font-family:"IBM Plex Sans",sans-serif;font-size:.85rem;color:var(--ink);line-height:1.5;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);border-radius:8px;padding:10px 12px;margin-bottom:9px}
+  .why::first-letter{text-transform:uppercase}
+  .why b{color:var(--accent);font-family:"IBM Plex Mono",monospace}
   .agree{text-align:center;font-size:.9rem;color:var(--ink-soft);margin:24px 0 0;padding-top:16px;border-top:1px dashed var(--line-2);display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:.3em}
   .agree .res{color:var(--answer);font-weight:600}
 
@@ -113,11 +119,16 @@
   .reference summary::after{content:'+';color:var(--accent);font-weight:700;font-size:1.15rem;line-height:1}
   .reference details[open] summary::after{content:'\2013'}
   .reference details[open] summary{border-bottom:1px solid var(--line)}
-  .rel-list{display:flex;flex-wrap:wrap;gap:7px;padding:14px}
-  .relc{font-family:"IBM Plex Mono",monospace;font-size:.85rem;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;color:var(--ink-soft)}
+  .rel-list{padding:4px 14px 10px}
+  .rel-table{width:100%;border-collapse:collapse;font-family:"IBM Plex Mono",monospace;font-size:.9rem}
+  .rel-table td{padding:8px 10px;border-bottom:1px solid var(--line)}
+  .rel-table tr:last-child td{border-bottom:none}
+  .rel-table .l{text-align:right;color:var(--ink);white-space:nowrap;width:1%;font-weight:500}
+  .rel-table .e{text-align:center;color:var(--accent);width:1%;padding:8px 6px;font-weight:600}
+  .rel-table .r{text-align:left;color:var(--ink-soft);white-space:nowrap}
 
   footer{margin-top:30px;font-size:.8rem;color:var(--ink-faint);text-align:center}
-  @media (prefers-reduced-motion: reduce){.ck::after{transition:none}}
+  @media (prefers-reduced-motion: reduce){.cut::after{transition:none}}
 
   @media print{
     :root{--bg:#fff}
@@ -129,7 +140,7 @@
     .method,.answer,.anchor{box-shadow:none;break-inside:avoid;page-break-inside:avoid}
     .step{break-inside:avoid;page-break-inside:avoid}
     .expr,.rt{overflow:visible}
-    .ck::after{transform:scaleX(1)!important}
+    .cut::after{transform:scaleX(1)!important}
     .yt-link a{color:var(--accent)}
     footer{margin-top:14px}
     @page{margin:12mm}
@@ -250,16 +261,20 @@ function fmt(x){
 
 // ---- renderers ----
 function tok(sym,strike){
-  const k=strike?' ck':'';
+  const k=strike?' cut':'';
   if(sym.includes('/')){
     const [n,d]=sym.split('/');
-    return '<span class="unit'+k+'"><span class="cf"><span class="cn">'+n+'</span><span class="cd">'+d+'</span></span></span>';
+    return '<span class="unit"><span class="cf"><span class="cn'+k+'">'+n+'</span><span class="cd'+k+'">'+d+'</span></span></span>';
   }
   return '<span class="unit'+k+'">'+sym+'</span>';
 }
+// compact compound unit (para o resultado/âncora)
+function tokc(sym,strike){ return tok(sym,strike); }
+// unidade de vazão como fração no MESMO tamanho da fração de conversão
 function rate(vol,time,part){
-  const kn=part==='num'?' ck':'', kd=part==='den'?' ck':'';
-  return '<span class="unit"><span class="cf"><span class="cn'+kn+'">'+vol+'</span><span class="cd'+kd+'">'+time+'</span></span></span>';
+  const cn='<span'+(part==='num'?' class="cut"':'')+'>'+vol+'</span>';
+  const cd='<span'+(part==='den'?' class="cut"':'')+'>'+time+'</span>';
+  return '<span class="frac ufrac"><span class="num">'+cn+'</span><span class="den">'+cd+'</span></span>';
 }
 function ust(st,cancel){
   if(st.simple!==undefined) return tok(st.simple, cancel==='whole');
@@ -321,6 +336,19 @@ function buildChain(val){
 function step(n,title,body,note){
   return '<div class="step"><div class="t"><span class="i">'+n+'</span>'+title+'</div>'+body+(note?'<div class="note">'+note+'</div>':'')+'</div>';
 }
+// derivação do número de uma relação de tempo (ex.: 86.400 = 24 × 60 × 60)
+function timeWhy(bigT, smallT, relR){
+  const order=['s','min','h','dia'];
+  const bf={0:60,1:60,2:24}; // fator entre order[i] e order[i+1]
+  const nome={s:'segundo',min:'minuto',h:'hora',dia:'dia'};
+  const bi=order.indexOf(bigT), si=order.indexOf(smallT);
+  if(bi<0||si<0||bi-si<2) return ''; // relação já é elementar
+  let passos=[], fatores=[];
+  for(let i=bi-1;i>=si;i--){ passos.push('1 '+order[i+1]+' tem '+bf[i]+' '+order[i]); fatores.push(bf[i]); }
+  const prod=fatores.join(' <b>×</b> ');
+  return '<div class="why">Por que 1 '+bigT+' = <b>'+fmt(relR)+'</b> '+smallT+'? Porque '+passos.join(', ')+
+    '. Multiplicando esses fatores: <b>'+prod+' = '+fmt(relR)+'</b> '+smallT+'.</div>';
+}
 
 // ---- método 1: análise dimensional ----
 function analiseHTML(ch){
@@ -332,22 +360,23 @@ function analiseHTML(ch){
     '<div class="expr center"><span class="row">'+V+fmt(val)+E+' '+ust(init,null)+'</span></div>',
     (cat.id==='vazao'&&hops.length>1)?'uma vazão é volume ÷ tempo — convertemos uma parte de cada vez.':'');
   for(const h of hops){
-    let title, phrase;
+    let title, phrase, why='';
     if(h.kind==='time'){
       title='Converta o tempo (embaixo): '+h.T1+' → '+h.T2;
-      phrase='como 1 '+h.relLU+' = '+fmt(h.relR)+' '+h.relRU+', o '+h.T1+' se corta e a vazão passa a ser por '+h.T2+'.';
+      why=timeWhy(h.relLU, h.relRU, h.relR);
+      phrase='o '+h.T1+' está embaixo na vazão e em cima na fração de conversão — por isso ele corta, e a vazão passa a ser por '+h.T2+'.';
     } else if(cat.id==='vazao'){
       title='Converta o volume (em cima): '+h.S+' → '+h.D;
-      phrase='o '+h.S+' aparece em cima e embaixo — corta, e o volume vira '+h.D+'.';
+      phrase='o '+h.S+' aparece em cima na vazão e embaixo na fração — por isso ele corta, e o volume vira '+h.D+'.';
     } else {
       title='Passe de '+h.S+' para '+h.D;
-      phrase='o '+h.S+' aparece em cima e embaixo — corta, e sobra '+h.D+'.';
+      phrase='o '+h.S+' aparece em cima e embaixo — por isso ele corta, e sobra '+h.D+'.';
     }
     const rel='<div class="rel">1 '+tok(h.relLU)+' '+EQ+' '+fmt(h.relR)+' '+tok(h.relRU)+'</div>';
     const expr='<div class="expr center"><span class="row">'+
       V+fmt(h.before)+E+' '+ust(h.ub,h.cancel)+' '+O+' '+factorFrac(h.fNn,h.fNu,h.fDn,h.fDu,h.fstrike)+
       ' '+EQ+' '+V+fmt(h.after)+E+' '+ust(h.ua,null)+'</span></div>';
-    html+=step(n++,title,rel+expr,phrase);
+    html+=step(n++,title,rel+why+expr,phrase);
   }
   html+=step(n++,'Resultado','<div class="expr center"><span class="row"><span class="res">'+fmt(result)+' '+tok(Bsym)+'</span></span></div>','');
   return html;
@@ -355,17 +384,18 @@ function analiseHTML(ch){
 
 // ---- método 2: regra de três ----
 function regraHop(h,n){
-  let rows, xExpr, title, phrase;
+  let rows, xExpr, title, phrase, why='';
   if(h.kind==='time'){
     const vol=h.ub.vol;
     title='Converta o tempo: '+h.T1+' → '+h.T2;
+    why=timeWhy(h.relLU, h.relRU, h.relR);
     let r1L,r2L;
     if(h.r>=1){ r1L='1 '+tok(h.T1); r2L=fmt(h.r)+' '+tok(h.T1);
       xExpr='x '+EQ+' '+V+fmt(h.before)+E+' '+O+' '+fmt(h.r)+' '+EQ+' <span class="res">'+fmt(h.after)+' '+tok(vol)+'</span>';
-      phrase='em 1 '+h.T2+' cabem '+fmt(h.r)+' '+h.T1+'; então em um '+h.T2+' inteiro passa '+fmt(h.r)+'× mais.';
+      phrase='em 1 '+h.T2+' cabem '+fmt(h.r)+' '+h.T1+'; então, em um '+h.T2+' inteiro, passa '+fmt(h.r)+'× mais.';
     } else { r1L=fmt(1/h.r)+' '+tok(h.T2); r2L='1 '+tok(h.T2);
       xExpr='x '+EQ+' '+fr(V+fmt(h.before)+E,fmt(1/h.r))+' '+EQ+' <span class="res">'+fmt(h.after)+' '+tok(vol)+'</span>';
-      phrase='1 '+h.T1+' equivale a '+fmt(1/h.r)+' '+h.T2+'; a quantidade se divide entre eles.';
+      phrase='1 '+h.T1+' equivale a '+fmt(1/h.r)+' '+h.T2+'; a quantidade se distribui entre eles.';
     }
     rows='<span class="cell">'+r1L+'</span><span class="arm">———</span><span class="cell">'+V+fmt(h.before)+E+' '+tok(vol)+'</span>'+
          '<span class="cell">'+r2L+'</span><span class="arm">———</span><span class="cell"><span class="x">x</span> '+tok(vol)+'</span>';
@@ -375,9 +405,9 @@ function regraHop(h,n){
     rows='<span class="cell">'+fmt(kS)+' '+tok(h.S)+'</span><span class="arm">———</span><span class="cell">'+fmt(kD)+' '+tok(h.D)+'</span>'+
          '<span class="cell">'+V+fmt(h.before)+E+' '+tok(h.S)+'</span><span class="arm">———</span><span class="cell"><span class="x">x</span> '+tok(h.D)+'</span>';
     xExpr='x '+EQ+' '+fr(V+fmt(h.before)+E+' '+O+' '+fmt(kD),fmt(kS))+' '+EQ+' <span class="res">'+fmt(h.after)+' '+tok(h.D)+'</span>';
-    phrase=h.S+' de um lado, '+h.D+' do outro; multiplique em cruz para achar o x.';
+    phrase='coloque '+h.S+' de um lado e '+h.D+' do outro, depois multiplique em cruz para achar o x.';
   }
-  return step(n,title,'<div class="rt">'+rows+'</div><div class="expr center" style="margin-top:8px"><span class="row">'+xExpr+'</span></div>',phrase);
+  return step(n,title,why+'<div class="rt">'+rows+'</div><div class="expr center" style="margin-top:8px"><span class="row">'+xExpr+'</span></div>',phrase);
 }
 function regraHTML(ch){
   const {hops, Bsym, result}=ch;
@@ -391,14 +421,17 @@ function regraHTML(ch){
 
 // ---- reference table ----
 function refRelations(c){
-  let arr=[];
+  let rows=[]; // cada linha: [lado esquerdo, lado direito]
   if(c.id==='vazao'){
-    arr=['1 m³ = 1000 L','1 min = 60 s','1 h = 60 min','1 h = 3600 s','1 dia = 24 h','1 dia = 1440 min','1 dia = 86400 s'];
+    rows=[['1 m³', fmt(1000)+' L'],['1 min','60 s'],['1 h','60 min'],['1 h',fmt(3600)+' s'],
+          ['1 dia','24 h'],['1 dia',fmt(1440)+' min'],['1 dia',fmt(86400)+' s']];
   } else {
     const base=c.un.find(u=>u.f===1);
-    arr=c.un.filter(u=>u.s!==base.s).map(u=> u.f>=1 ? '1 '+u.s+' = '+fmt(u.f)+' '+base.s : '1 '+base.s+' = '+fmt(1/u.f)+' '+u.s );
+    rows=c.un.filter(u=>u.s!==base.s).map(u=> u.f>=1 ? ['1 '+u.s, fmt(u.f)+' '+base.s] : ['1 '+base.s, fmt(1/u.f)+' '+u.s] );
   }
-  return arr.map(r=>'<span class="relc">'+r+'</span>').join('');
+  return '<table class="rel-table"><tbody>'+
+    rows.map(r=>'<tr><td class="l">'+r[0]+'</td><td class="e">=</td><td class="r">'+r[1]+'</td></tr>').join('')+
+    '</tbody></table>';
 }
 function buildReference(){
   const acc=$('ref-acc');
@@ -448,7 +481,7 @@ function render(){
   m2.innerHTML=regraHTML(ch);
   agree.innerHTML='Os dois caminhos chegam ao mesmo resultado: <span class="res">'+fmt(result)+' '+tok(Bsym)+'</span>';
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const cells=m1.querySelectorAll('.ck');
+  const cells=m1.querySelectorAll('.cut');
   if(reduce){cells.forEach(c=>c.classList.add('on'));}
   else{requestAnimationFrame(()=>requestAnimationFrame(()=>cells.forEach(c=>c.classList.add('on'))));}
 }
