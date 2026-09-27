@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Equivaler — Conversão de unidades passo a passo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#faf9f5; --surface:#ffffff; --surface-2:#f2f6fa;
+    --ink:#141413; --ink-soft:#51687e; --ink-faint:#8ba0b3;
+    --line:#dde5ec; --line-2:#bccddb;
+    --accent:#1660c9; --accent-soft:#dfebfb;
+    --cancel:#c0392b; --cancel-soft:#fbe9e6;
+    --answer:#178a4c; --answer-soft:#daf0e4;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:inherit}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:30px 20px 72px}
+
+  header{margin-bottom:24px}
+  .head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .brand{font-weight:700;font-size:clamp(1.15rem,3.4vw,1.5rem);color:var(--accent);letter-spacing:-.01em;margin-bottom:4px}
+  .pdf-btn{
+    font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--accent);
+    background:var(--surface);border:1px solid var(--line-2);border-radius:9px;padding:8px 13px;
+    display:inline-flex;align-items:center;gap:7px;transition:background .15s,border-color .15s;flex:none;
+  }
+  .pdf-btn:hover{background:var(--accent-soft);border-color:var(--accent)}
+  .pdf-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  h1{
+    font-family:"IBM Plex Sans",sans-serif;font-weight:700;
+    font-size:clamp(1.7rem,5.2vw,2.45rem);line-height:1.1;margin:0 0 10px;
+    letter-spacing:-.015em;
+  }
+  .lede{color:var(--ink-soft);font-size:1rem;max-width:62ch;margin:0}
+  .credit{font-size:.78rem;color:var(--ink-soft);margin:14px 0 0}
+  .yt-link{font-size:.76rem;margin:2px 0 0}
+  .yt-link a{color:var(--accent);font-weight:600;text-decoration:none}
+  .yt-link a:hover{text-decoration:underline}
+
+  .panel{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:18px;margin-bottom:22px;box-shadow:0 1px 2px rgba(20,20,19,.03);
+  }
+  .grandezas{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+  .gtab{
+    font:inherit;font-size:.9rem;font-weight:500;cursor:pointer;
+    background:var(--surface-2);color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .gtab:hover{color:var(--ink);border-color:var(--line-2)}
+  .gtab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .controls{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto minmax(0,1fr);
+    gap:12px;align-items:end;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .field label{font-size:.78rem;color:var(--ink-soft);font-weight:600}
+  input,select{
+    font:inherit;font-size:1rem;color:var(--ink);background:var(--surface-2);
+    border:1px solid var(--line);border-radius:9px;padding:11px 12px;width:100%;appearance:none;
+  }
+  input{font-family:"IBM Plex Mono",monospace;font-weight:500}
+  select{
+    background-image:linear-gradient(45deg,transparent 50%,var(--ink-soft) 50%),linear-gradient(135deg,var(--ink-soft) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px;cursor:pointer;
+  }
+  input:focus,select:focus,.gtab:focus-visible,.swap:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .swap{
+    font:inherit;cursor:pointer;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--accent);border-radius:9px;width:44px;height:44px;font-size:1.15rem;
+    display:flex;align-items:center;justify-content:center;transition:background .15s;flex:none;
+  }
+  .swap:hover{background:var(--accent-soft);border-color:var(--line-2)}
+
+  .answer{
+    display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+    background:var(--answer-soft);border:1px solid color-mix(in srgb,var(--answer) 35%,transparent);
+    border-radius:12px;padding:16px 18px;margin-bottom:22px;
+  }
+  .answer .lbl{font-size:.78rem;color:var(--ink-soft);font-weight:600;width:100%}
+  .answer .eq{font-family:"IBM Plex Mono",monospace;font-size:clamp(1.05rem,3.6vw,1.4rem);font-weight:500;display:flex;align-items:center;flex-wrap:wrap;gap:.15em}
+  .answer .res{color:var(--answer);font-weight:600}
+  .hint{color:var(--ink-soft);font-style:italic}
+
+  .anchor{
+    background:var(--accent-soft);border-left:3px solid var(--accent);
+    border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:24px;font-size:.95rem;
+    display:flex;align-items:center;flex-wrap:wrap;gap:.3em;
+  }
+  .anchor .eqf{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;gap:.15em}
+
+  .methods{display:grid;grid-template-columns:1fr;gap:18px;align-items:stretch}
+  @media(min-width:720px){.methods{grid-template-columns:1fr 1fr}}
+  .method{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 16px 20px;box-shadow:0 1px 2px rgba(20,20,19,.03);display:flex;flex-direction:column}
+  .method h2{font-family:"Space Grotesk",sans-serif;font-size:1.05rem;font-weight:700;margin:0 0 2px;display:flex;align-items:center;gap:9px;letter-spacing:-.01em}
+  .method h2 .n{
+    font-family:"Space Grotesk",sans-serif;font-size:.85rem;font-weight:700;color:#fff;background:var(--accent);
+    width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;flex:none;
+  }
+  .method .sub{color:var(--ink-soft);font-size:.86rem;margin:0 0 16px}
+
+  .step{margin-bottom:15px}
+  .step:last-child{margin-bottom:0}
+  .step .t{font-family:"Space Grotesk",sans-serif;font-size:.9rem;color:var(--ink);font-weight:500;letter-spacing:-.005em;margin-bottom:7px;display:flex;gap:8px;align-items:baseline}
+  .step .t .i{font-weight:700;color:var(--accent)}
+  .expr{
+    font-family:"IBM Plex Mono",monospace;font-size:1.02rem;line-height:2.1;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:9px;
+    padding:12px 14px;overflow-x:auto;white-space:nowrap;
+  }
+  .expr.center{text-align:center}
+  .expr .row{display:inline-flex;align-items:center;gap:.15em}
+
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 .2em}
+  .frac .num{border-bottom:1.6px solid currentColor;padding:0 .55em 2px}
+  .frac .den{padding:2px .55em 0}
+  .op{color:var(--ink-soft);margin:0 .3em}
+  .val{font-weight:600}
+  .res{color:var(--answer);font-weight:600}
+
+  .unit{position:relative;font-weight:500;display:inline-flex;align-items:center;vertical-align:middle}
+  /* compound units rendered as a 2-line fraction */
+  .cf{display:inline-flex;flex-direction:column;text-align:center;line-height:1.02;font-size:.8em;margin:0 .05em}
+  .cf .cn{border-bottom:1.4px solid currentColor;padding:0 .2em 1px}
+  .cf .cd{padding:1px .2em 0}
+
+  .unit.cancel::after{
+    content:'';position:absolute;left:-2px;right:-2px;top:50%;height:2px;background:var(--cancel);
+    transform:scaleX(0);transform-origin:left;border-radius:2px;
+    transition:transform .5s ease .15s;
+  }
+  .unit.cancel.on{color:var(--cancel)}
+  .unit.cancel.on::after{transform:scaleX(1)}
+
+  .rt{display:grid;grid-template-columns:auto auto auto;gap:8px 14px;align-items:center;justify-items:start;
+      font-family:"IBM Plex Mono",monospace;font-size:1.02rem;
+      background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:14px;overflow-x:auto}
+  .rt .cell{display:inline-flex;align-items:center;gap:.15em;white-space:nowrap}
+  .rt .arm{color:var(--accent)}
+  .rt .x{color:var(--accent);font-weight:600}
+
+  .note{font-family:"Kalam",cursive;font-size:.95rem;color:var(--ink-soft);margin-top:9px;line-height:1.35;display:flex;align-items:center;flex-wrap:wrap;gap:.25em}
+  .agree{
+    text-align:center;font-size:.9rem;color:var(--ink-soft);margin:24px 0 0;
+    padding-top:16px;border-top:1px dashed var(--line-2);display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:.3em;
+  }
+  .agree .res{color:var(--answer);font-weight:600}
+  footer{margin-top:34px;font-size:.8rem;color:var(--ink-faint);text-align:center}
+  @media (prefers-reduced-motion: reduce){.unit.cancel::after{transition:none}}
+
+  @media print{
+    :root{--bg:#fff}
+    body{background:#fff}
+    .wrap{max-width:none;padding:0 6mm}
+    .pdf-btn,.swap,.panel{display:none!important}
+    header{margin-bottom:12px}
+    .methods{grid-template-columns:1fr;gap:12px}
+    .method,.answer,.anchor{box-shadow:none;break-inside:avoid;page-break-inside:avoid}
+    .step{break-inside:avoid;page-break-inside:avoid}
+    .expr,.rt{overflow:visible}
+    .unit.cancel::after{transform:scaleX(1)!important}
+    .yt-link a{color:var(--accent)}
+    footer{margin-top:14px}
+    @page{margin:12mm}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="head-row">
+      <div class="brand">Equivaler</div>
+      <button class="pdf-btn" id="pdf" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+        Exportar PDF
+      </button>
+    </div>
+    <h1>Conversão de unidades, passo a passo</h1>
+    <p class="lede">Digite um valor, escolha as unidades, e acompanhe o raciocínio pelos dois métodos: análise dimensional e regra de três.</p>
+    <p class="credit">Criado pelo Prof. Me. Rodrigo Gonçalves (Prof Oswy)</p>
+    <p class="yt-link">Canal no YouTube: <a href="https://www.youtube.com/@ProfOswy" target="_blank" rel="noopener">www.youtube.com/@ProfOswy</a></p>
+  </header>
+
+  <div class="panel">
+    <div class="grandezas" id="grandezas" role="group" aria-label="Grandeza"></div>
+    <div class="controls">
+      <div class="field">
+        <label for="valor">Valor</label>
+        <input id="valor" inputmode="decimal" value="10" aria-label="Valor a converter">
+      </div>
+      <div class="field">
+        <label for="de">De</label>
+        <select id="de"></select>
+      </div>
+      <button class="swap" id="swap" title="Inverter unidades" aria-label="Inverter as unidades">⇄</button>
+      <div class="field">
+        <label for="para">Para</label>
+        <select id="para"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="answer" id="answer" aria-live="polite"></div>
+  <div class="anchor" id="anchor"></div>
+
+  <div class="methods">
+    <section class="method">
+      <h2><span class="n">1</span>Análise dimensional</h2>
+      <p class="sub">A unidade é tratada como um fator algébrico: ela se cancela.</p>
+      <div id="m1"></div>
+    </section>
+    <section class="method">
+      <h2><span class="n">2</span>Regra de três</h2>
+      <p class="sub">Uma proporção direta entre a relação conhecida e o valor buscado.</p>
+      <div id="m2"></div>
+    </section>
+  </div>
+
+  <p class="agree" id="agree"></p>
+  <footer>Relações de conversão baseadas nas equivalências padrão do SI.</footer>
+</div>
+
+<script>
+const CATS = [
+  {id:'comprimento',nome:'Comprimento',un:[
+    {s:'km',f:1000},{s:'hm',f:100},{s:'dam',f:10},{s:'m',f:1},
+    {s:'dm',f:0.1},{s:'cm',f:0.01},{s:'mm',f:0.001},
+    {s:'pol',f:0.0254},{s:'pé',f:0.3048},{s:'mi',f:1609.344}
+  ],def:['km','m']},
+  {id:'area',nome:'Área',un:[
+    {s:'km²',f:1e6},{s:'ha',f:1e4},{s:'a',f:100},{s:'m²',f:1},
+    {s:'dm²',f:0.01},{s:'cm²',f:1e-4},{s:'mm²',f:1e-6}
+  ],def:['m²','cm²']},
+  {id:'volume',nome:'Volume',un:[
+    {s:'m³',f:1},{s:'hL',f:0.1},{s:'dm³',f:1e-3},{s:'L',f:1e-3},
+    {s:'dL',f:1e-4},{s:'cm³',f:1e-6},{s:'mL',f:1e-6}
+  ],def:['m³','L']},
+  {id:'massa',nome:'Massa',un:[
+    {s:'t',f:1000},{s:'kg',f:1},{s:'g',f:1e-3},{s:'mg',f:1e-6}
+  ],def:['t','kg']},
+  {id:'forca',nome:'Força',un:[
+    {s:'MN',f:1e6},{s:'kN',f:1000},{s:'N',f:1},{s:'kgf',f:9.80665},{s:'tf',f:9806.65}
+  ],def:['kN','kgf']},
+  {id:'pressao',nome:'Pressão / Tensão',un:[
+    {s:'MPa',f:1e6},{s:'kPa',f:1000},{s:'Pa',f:1},{s:'bar',f:1e5},
+    {s:'atm',f:101325},{s:'psi',f:6894.757},{s:'kgf/cm²',f:98066.5},
+    {s:'mca',f:9806.65},{s:'mmca',f:9.80665},{s:'mmHg',f:133.322}
+  ],def:['mca','kgf/cm²']},
+  {id:'vazao',nome:'Vazão',un:[
+    {s:'m³/s',f:1},{s:'m³/min',f:1/60},{s:'m³/h',f:1/3600},{s:'m³/dia',f:1/86400},
+    {s:'L/s',f:1e-3},{s:'L/min',f:1e-3/60},{s:'L/h',f:1e-3/3600},{s:'L/dia',f:1e-3/86400}
+  ],def:['L/s','m³/h']},
+];
+
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function sup(n){return String(n).split('').map(c=>SUP[c]||c).join('');}
+function fmt(x){
+  if(x===0) return '0';
+  const abs=Math.abs(x);
+  if(Math.abs(x-Math.round(x)) < 1e-9*Math.max(1,abs) && abs < 1e15) return Math.round(x).toLocaleString('pt-BR');
+  if(abs>=1e7 || abs<1e-4){
+    const exp=Math.floor(Math.log10(abs));
+    let m=x/Math.pow(10,exp);
+    let ms=m.toFixed(4).replace(/0+$/,'').replace(/\.$/,'').replace('.',',');
+    return ms+' × 10'+sup(exp);
+  }
+  const p=parseFloat(x.toPrecision(6));
+  return p.toLocaleString('pt-BR',{maximumFractionDigits:6});
+}
+
+// render a unit symbol; compound (with "/") becomes a 2-line fraction
+function u(sym,cancel){
+  const cls='unit'+(cancel?' cancel':'');
+  if(sym.includes('/')){
+    const [n,d]=sym.split('/');
+    return '<span class="'+cls+'"><span class="cf"><span class="cn">'+n+'</span><span class="cd">'+d+'</span></span></span>';
+  }
+  return '<span class="'+cls+'">'+sym+'</span>';
+}
+
+let cat=CATS[0];
+const $=id=>document.getElementById(id);
+const gWrap=$('grandezas');
+CATS.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='gtab';b.textContent=c.nome;b.setAttribute('aria-pressed',c===cat);
+  b.dataset.id=c.id;b.onclick=()=>{cat=c;setCat();};
+  gWrap.appendChild(b);
+});
+function fillSelect(sel,val){
+  sel.innerHTML='';
+  cat.un.forEach(x=>{const o=document.createElement('option');o.value=x.s;o.textContent=x.s;if(x.s===val)o.selected=true;sel.appendChild(o);});
+}
+function setCat(){
+  [...gWrap.children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.id===cat.id));
+  fillSelect($('de'),cat.def[0]);fillSelect($('para'),cat.def[1]);render();
+}
+function unit(sym){return cat.un.find(x=>x.s===sym);}
+
+function render(){
+  let V=parseFloat($('valor').value.replace(',','.'));
+  const A=unit($('de').value), B=unit($('para').value);
+  const ans=$('answer'),anchor=$('anchor'),m1=$('m1'),m2=$('m2'),agree=$('agree');
+
+  if(!isFinite(V)){
+    ans.innerHTML='<span class="lbl">Resultado</span><span class="hint">Digite um valor numérico para ver os passos.</span>';
+    anchor.innerHTML='';m1.innerHTML='';m2.innerHTML='';agree.innerHTML='';return;
+  }
+  const K=A.f/B.f, R=V*K;
+
+  ans.innerHTML='<span class="lbl">Resultado</span>'+
+    '<span class="eq"><span class="val">'+fmt(V)+'</span> '+u(A.s)+
+    ' <span class="op">=</span> <span class="res">'+fmt(R)+' '+u(B.s)+'</span></span>';
+
+  if(A.s===B.s){
+    anchor.innerHTML='As unidades são iguais — não há conversão a fazer.';
+    m1.innerHTML='';m2.innerHTML='';agree.innerHTML='';return;
+  }
+
+  anchor.innerHTML='Relação conhecida (o ponto de partida dos dois métodos): '+
+    '<span class="eqf">1 '+u(A.s)+' = '+fmt(K)+' '+u(B.s)+'</span>';
+
+  // MÉTODO 1 — análise dimensional
+  const fr=(n,d)=>'<span class="frac"><span class="num">'+n+'</span><span class="den">'+d+'</span></span>';
+  m1.innerHTML=
+    '<div class="step"><div class="t"><span class="i">1</span>Escreva o valor com sua unidade</div>'+
+      '<div class="expr center"><span class="row"><span class="val">'+fmt(V)+'</span> '+u(A.s)+'</span></div></div>'+
+    '<div class="step"><div class="t"><span class="i">2</span>Escreva esse valor como uma fração, dividido por 1</div>'+
+      '<div class="expr center"><span class="row">'+fr('<span class="val">'+fmt(V)+'</span> '+u(A.s),'1')+'</span></div>'+
+      '<div class="note">todo número dividido por 1 continua o mesmo — assim ele já fica em forma de fração para a próxima conta.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">3</span>Multiplique pela fração de conversão</div>'+
+      '<div class="expr center"><span class="row">'+fr('<span class="val">'+fmt(V)+'</span> '+u(A.s),'1')+
+        ' <span class="op">×</span> '+fr(fmt(K)+' '+u(B.s),'1 '+u(A.s))+'</span></div>'+
+      '<div class="note">essa fração vale 1, porque 1 '+u(A.s)+' = '+fmt(K)+' '+u(B.s)+'. multiplicar por 1 não muda a quantidade, só troca a unidade.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">4</span>Multiplique as frações: numerador × numerador, denominador × denominador</div>'+
+      '<div class="expr center"><span class="row"><span class="op">=</span> '+
+        fr('<span class="val">'+fmt(V)+'</span> '+u(A.s)+' <span class="op">×</span> '+fmt(K)+' '+u(B.s),'1 <span class="op">×</span> 1 '+u(A.s))+'</span></div>'+
+      '<div class="note">na multiplicação de frações, o de cima multiplica o de cima e o de baixo multiplica o de baixo.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">5</span>Corte a unidade que aparece em cima e embaixo</div>'+
+      '<div class="expr center"><span class="row"><span class="op">=</span> '+
+        fr('<span class="val">'+fmt(V)+'</span> '+u(A.s,true)+' <span class="op">×</span> '+fmt(K)+' '+u(B.s),'1 <span class="op">×</span> 1 '+u(A.s,true))+
+        ' <span class="op">=</span> '+fr('<span class="val">'+fmt(V)+'</span> <span class="op">×</span> '+fmt(K)+' '+u(B.s),'1')+'</span></div>'+
+      '<div class="note">a unidade '+A.s+' está dividida por ela mesma ('+A.s+' ÷ '+A.s+' = 1), por isso ela se corta e some da conta.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">6</span>Divida por 1 e multiplique os números</div>'+
+      '<div class="expr center"><span class="row"><span class="op">=</span> <span class="val">'+fmt(V)+'</span> <span class="op">×</span> '+fmt(K)+' '+u(B.s)+
+        ' <span class="op">=</span> <span class="res">'+fmt(R)+' '+u(B.s)+'</span></span></div>'+
+      '<div class="note">dividir por 1 não altera nada; então é só multiplicar '+fmt(V)+' × '+fmt(K)+'.</div></div>';
+
+  // MÉTODO 2 — regra de três
+  m2.innerHTML=
+    '<div class="step"><div class="t"><span class="i">1</span>Parta da relação conhecida</div>'+
+      '<div class="expr center"><span class="row">1 '+u(A.s)+' <span class="op">=</span> '+fmt(K)+' '+u(B.s)+'</span></div>'+
+      '<div class="note">essa igualdade é a referência: a cada 1 '+A.s+' correspondem '+fmt(K)+' '+B.s+'.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">2</span>Monte a proporção, alinhando as unidades iguais na mesma coluna</div>'+
+      '<div class="rt">'+
+        '<span class="cell">1 '+u(A.s)+'</span><span class="arm">———</span><span class="cell">'+fmt(K)+' '+u(B.s)+'</span>'+
+        '<span class="cell"><span class="val">'+fmt(V)+'</span> '+u(A.s)+'</span><span class="arm">———</span><span class="cell x">x '+u(B.s)+'</span>'+
+      '</div>'+
+      '<div class="note">'+A.s+' embaixo de '+A.s+', '+B.s+' embaixo de '+B.s+'. o x é o valor que queremos, na unidade '+B.s+'.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">3</span>São grandezas diretamente proporcionais</div>'+
+      '<div class="expr center"><span class="row"><span class="val">'+fmt(V)+'</span> '+u(A.s)+' <span class="op">→</span> x '+u(B.s)+'</span></div>'+
+      '<div class="note">quanto maior o valor em '+A.s+', maior em '+B.s+'. por isso multiplicamos na diagonal (multiplicação cruzada).</div></div>'+
+    '<div class="step"><div class="t"><span class="i">4</span>Multiplique em cruz (na diagonal)</div>'+
+      '<div class="expr center"><span class="row">1 <span class="op">×</span> x <span class="op">=</span> <span class="val">'+fmt(V)+'</span> <span class="op">×</span> '+fmt(K)+'</span></div>'+
+      '<div class="note">numa proporção, o produto de uma diagonal é igual ao da outra.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">5</span>Isole o x</div>'+
+      '<div class="expr center"><span class="row">x <span class="op">=</span> '+fr('<span class="val">'+fmt(V)+'</span> <span class="op">×</span> '+fmt(K),'1')+'</span></div>'+
+      '<div class="note">o 1 que multiplicava o x passa para o outro lado dividindo.</div></div>'+
+    '<div class="step"><div class="t"><span class="i">6</span>Resolva</div>'+
+      '<div class="expr center"><span class="row">x <span class="op">=</span> <span class="res">'+fmt(R)+' '+u(B.s)+'</span></span></div>'+
+      '<div class="note">dividir por 1 não muda nada: '+fmt(V)+' × '+fmt(K)+' = '+fmt(R)+'.</div></div>';
+
+  agree.innerHTML='Os dois caminhos chegam ao mesmo resultado: <span class="res">'+fmt(R)+' '+u(B.s)+'</span>';
+
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cells=m1.querySelectorAll('.unit.cancel');
+  if(reduce){cells.forEach(c=>c.classList.add('on'));}
+  else{requestAnimationFrame(()=>requestAnimationFrame(()=>cells.forEach(c=>c.classList.add('on'))));}
+}
+
+$('valor').addEventListener('input',render);
+$('de').addEventListener('change',render);
+$('para').addEventListener('change',render);
+$('swap').addEventListener('click',()=>{const d=$('de').value,p=$('para').value;$('de').value=p;$('para').value=d;render();});
+$('pdf').addEventListener('click',()=>window.print());
+setCat();
+</script>
+</body>
+</html>
